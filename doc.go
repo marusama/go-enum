@@ -9,7 +9,7 @@
 // to skip a value in the enum that won't be an allowed value.
 //
 // Installation
-//  go get github.com/abice/go-enum
+//  go get -u github.com/marusama/go-enum
 //
 // Usage:
 // Sample File

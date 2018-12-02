@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/bradleyjkemp/cupaloy"
+	"github.com/stretchr/testify/mock"
 )
 
 // Snapshots are isolated by package so test functions with the same name are fine
@@ -121,4 +122,88 @@ func TestShouldUpdate(t *testing.T) {
 		// snapshot again with old value to revert the update
 		c.Snapshot("Hello")
 	})
+}
+
+func TestFailedSnapshotT(t *testing.T) {
+	mockT := &TestingT{}
+	mockT.On("Helper").Return()
+	mockT.On("Failed").Return(false)
+	mockT.On("Name").Return(t.Name())
+	mockT.On("Error", mock.Anything).Return()
+
+	cupaloy.SnapshotT(mockT, "This should fail due to a mismatch")
+	mockT.AssertCalled(t, "Error", mock.Anything)
+}
+
+func TestFailedTestNoop(t *testing.T) {
+	mockT := &TestingT{}
+	mockT.On("Helper").Return()
+	mockT.On("Failed").Return(true)
+
+	cupaloy.SnapshotT(mockT, "This should not create a snapshot")
+	mockT.AssertNotCalled(t, "Error")
+}
+
+func TestGlobalFailOnUpdate(t *testing.T) {
+	cupaloy.Global = cupaloy.Global.WithOptions(
+		cupaloy.FailOnUpdate(false),
+		cupaloy.ShouldUpdate(func() bool { return true }))
+	// reset global after test
+	defer func() { cupaloy.Global = cupaloy.NewDefaultConfig() }()
+
+	mockT := &TestingT{}
+	mockT.On("Helper").Return()
+	mockT.On("Failed").Return(false)
+	mockT.On("Name").Return(t.Name())
+
+	cupaloy.SnapshotT(mockT, "This should fail because updating, but won't because of global setting")
+	mockT.AssertNotCalled(t, "Error")
+}
+
+func TestGlobalCreateNewAutomatically(t *testing.T) {
+	cupaloy.Global = cupaloy.Global.WithOptions(cupaloy.CreateNewAutomatically(false))
+	// reset global after test
+	defer func() { cupaloy.Global = cupaloy.NewDefaultConfig() }()
+
+	mockT := &TestingT{}
+	mockT.On("Helper").Return()
+	mockT.On("Failed").Return(false)
+	mockT.On("Name").Return(t.Name())
+	mockT.On("Error", mock.Anything).Return()
+
+	cupaloy.SnapshotT(mockT, "This should fail because doesn't exist")
+	mockT.AssertCalled(t, "Error", mock.Anything)
+}
+
+func TestFailOnUpdate(t *testing.T) {
+	snapshotter := cupaloy.New(cupaloy.EnvVariableName("GOPATH"), cupaloy.FailOnUpdate(false))
+
+	err := snapshotter.Snapshot("Hello new world")
+	if err != nil {
+		t.Fatal("FailOnUpdate(false) should disable errors when updating snapshots")
+	}
+
+	snapshotter.Snapshot("Hello world") // reset snapshot to known state (ignoring return value)
+}
+
+func TestGlobalFatalOnMismatch(t *testing.T) {
+	cupaloy.Global = cupaloy.Global.WithOptions(cupaloy.FatalOnMismatch(true))
+	// reset global after test
+	defer func() { cupaloy.Global = cupaloy.NewDefaultConfig() }()
+
+	mockT := &TestingT{}
+	mockT.On("Helper").Return()
+	mockT.On("Failed").Return(false)
+	mockT.On("Name").Return(t.Name())
+	mockT.On("Error", mock.Anything).Return()
+	mockT.On("Fatal", mock.Anything).Return()
+
+	cupaloy.SnapshotT(mockT, "This should fatal due to a mismatch")
+	mockT.AssertNotCalled(t, "Error", mock.Anything)
+	mockT.AssertCalled(t, "Fatal", mock.Anything)
+}
+
+func TestSnapshotFileExtension(t *testing.T) {
+	snapshotter := cupaloy.New(cupaloy.SnapshotFileExtension(".myextension"))
+	snapshotter.SnapshotT(t, "This should end up in a file with extension .myextension")
 }

@@ -3,7 +3,7 @@
 
 /*
 This example shows the conversion of enumerations between GO and SQL database.
-You can run this example with the command: `go test -tags example github.com/abice/go-enum/example -v -run ^ExampleSQL$`
+You can run this example with the command: `go test -tags example github.com/marusama/go-enum/example -v -run ^ExampleSQL$`
 Don't forget to change the constant "dataSourceName" if necessary and apply the sql query.
 
 SQL query to create a database and fill the initial data:

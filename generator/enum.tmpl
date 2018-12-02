@@ -55,6 +55,27 @@ func (x *{{.enum.Name}}) UnmarshalText(text []byte) error {
 }
 {{end}}
 
+{{ if .json }}
+// MarshalJSON implements the json marshaller method
+func (x {{.enum.Name}}) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.String())
+}
+
+// UnmarshalJSON implements the json unmarshaller method
+func (x *{{.enum.Name}}) UnmarshalJSON(b []byte) error {
+	var name string
+	if err := json.Unmarshal(b, &name); err != nil {
+		return err
+	}
+	tmp, err := Parse{{.enum.Name}}(name)
+	if err != nil {
+		return err
+	}
+	*x = tmp
+	return nil
+}
+{{end}}
+
 {{ if .sql }}
 // Scan implements the Scanner interface.
 func (x *{{.enum.Name}}) Scan(value interface{}) error {

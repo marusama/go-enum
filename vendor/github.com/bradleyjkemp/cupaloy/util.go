@@ -22,6 +22,17 @@ var spewConfig = spew.ConfigState{
 	SpewKeys:                true, // if unable to sort map keys then spew keys to strings and sort those
 }
 
+//go:generate $GOPATH/bin/mockery -output=examples -outpkg=examples_test -testonly -name=TestingT
+
+// TestingT is a subset of the interface testing.TB allowing it to be mocked in tests.
+type TestingT interface {
+	Helper()
+	Failed() bool
+	Error(args ...interface{})
+	Fatal(args ...interface{})
+	Name() string
+}
+
 func getNameOfCaller() string {
 	pc, _, _, _ := runtime.Caller(2) // first caller is the caller of this function, we want the caller of our caller
 	fullPath := runtime.FuncForPC(pc).Name()
@@ -36,7 +47,7 @@ func envVariableSet(envVariable string) bool {
 }
 
 func (c *Config) snapshotFilePath(testName string) string {
-	return filepath.Join(c.subDirName, testName)
+	return filepath.Join(c.subDirName, testName+c.snapshotFileExtension)
 }
 
 // Legacy snapshot format where all items were spewed
@@ -92,6 +103,11 @@ func (c *Config) updateSnapshot(snapshotName string, snapshot string) error {
 	err = ioutil.WriteFile(snapshotFile, []byte(snapshot), os.FileMode(0644))
 	if err != nil {
 		return err
+	}
+
+	if !c.failOnUpdate {
+		//TODO: should a warning still be printed here?
+		return nil
 	}
 
 	if isNewSnapshot {

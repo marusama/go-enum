@@ -1,7 +1,7 @@
 version: 2
 jobs:
   golang_1.9:
-    working_directory: /go/src/github.com/abice/go-enum
+    working_directory: /go/src/github.com/marusama/go-enum
     docker:
       - image: circleci/golang:1.9
     steps:
@@ -24,7 +24,7 @@ jobs:
           command: |
             make cover
   golang_1.10:
-    working_directory: /go/src/github.com/abice/go-enum
+    working_directory: /go/src/github.com/marusama/go-enum
     docker:
       - image: circleci/golang:1.10
     steps:
@@ -39,7 +39,7 @@ jobs:
           command: |
             make cover
   golang_1.11:
-    working_directory: /go/src/github.com/abice/go-enum
+    working_directory: /go/src/github.com/marusama/go-enum
     docker:
       - image: circleci/golang:1.11
     steps:

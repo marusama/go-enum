@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/abice/go-enum/generator"
 	"github.com/go-easygen/cli"
+	"github.com/marusama/go-enum/generator"
 )
 
 type rootT struct {
@@ -17,6 +17,7 @@ type rootT struct {
 	NoPrefix  bool     `cli:"noprefix" usage:"Prevents the constants generated from having the Enum as a prefix."`
 	Lowercase bool     `cli:"lower" usage:"Adds lowercase variants of the enum strings for lookup."`
 	Marshal   bool     `cli:"marshal" usage:"Adds text marshalling functions."`
+	JSON      bool     `cli:"json" usage:"Adds json marshalling functions."`
 	SQL       bool     `cli:"sql" usage:"Adds SQL database scan and value functions."`
 	Flag      bool     `cli:"flag" usage:"Adds golang flag functions."`
 	Prefix    string   `cli:"prefix" usage:"Replaces the prefix with a user one."`
@@ -39,6 +40,9 @@ func main() {
 			}
 			if argv.Marshal {
 				g.WithMarshal()
+			}
+			if argv.JSON {
+				g.WithJSON()
 			}
 			if argv.SQL {
 				g.WithSQLDriver()

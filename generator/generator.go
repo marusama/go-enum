@@ -17,7 +17,7 @@ import (
 	"golang.org/x/tools/imports"
 
 	"github.com/Masterminds/sprig"
-	"github.com/abice/go-enum/generator/assets"
+	"github.com/marusama/go-enum/generator/assets"
 	"github.com/pkg/errors"
 )
 
@@ -34,6 +34,7 @@ type Generator struct {
 	noPrefix        bool
 	lowercaseLookup bool
 	marshal         bool
+	json            bool
 	sql             bool
 	flag            bool
 	names           bool
@@ -102,6 +103,12 @@ func (g *Generator) WithMarshal() *Generator {
 	return g
 }
 
+// WithJSON is used to add json marshalling to the enum
+func (g *Generator) WithJSON() *Generator {
+	g.json = true
+	return g
+}
+
 // WithSQLDriver is used to add marshalling to the enum
 func (g *Generator) WithSQLDriver() *Generator {
 	g.sql = true
@@ -167,6 +174,7 @@ func (g *Generator) Generate(f *ast.File) ([]byte, error) {
 			"name":      name,
 			"lowercase": g.lowercaseLookup,
 			"marshal":   g.marshal,
+			"json":      g.json,
 			"sql":       g.sql,
 			"flag":      g.flag,
 			"names":     g.names,
