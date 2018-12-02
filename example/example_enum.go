@@ -55,6 +55,27 @@ const (
 
 const _MakeName = "ToyotaChevyFordTeslaHyundaiNissanJaguarAudiBMWMercedes-BenzVolkswagon"
 
+var _MakeNames = []string{
+	_MakeName[0:6],
+	_MakeName[6:11],
+	_MakeName[11:15],
+	_MakeName[15:20],
+	_MakeName[20:27],
+	_MakeName[27:33],
+	_MakeName[33:39],
+	_MakeName[39:43],
+	_MakeName[43:46],
+	_MakeName[46:59],
+	_MakeName[59:69],
+}
+
+// MakeNames returns a list of possible string values of Make.
+func MakeNames() []string {
+	tmp := make([]string, len(_MakeNames))
+	copy(tmp, _MakeNames)
+	return tmp
+}
+
 var _MakeMap = map[Make]string{
 	0:  _MakeName[0:6],
 	2:  _MakeName[6:11],
@@ -69,11 +90,12 @@ var _MakeMap = map[Make]string{
 	20: _MakeName[59:69],
 }
 
-func (i Make) String() string {
-	if str, ok := _MakeMap[i]; ok {
+// String implements the Stringer interface.
+func (x Make) String() string {
+	if str, ok := _MakeMap[x]; ok {
 		return str
 	}
-	return fmt.Sprintf("Make(%d)", i)
+	return fmt.Sprintf("Make(%d)", x)
 }
 
 var _MakeValue = map[string]Make{
@@ -104,15 +126,17 @@ var _MakeValue = map[string]Make{
 // ParseMake attempts to convert a string to a Make
 func ParseMake(name string) (Make, error) {
 	if x, ok := _MakeValue[name]; ok {
-		return Make(x), nil
+		return x, nil
 	}
-	return Make(0), fmt.Errorf("%s is not a valid Make", name)
+	return Make(0), fmt.Errorf("%s is not a valid Make, try [%s]", name, strings.Join(_MakeNames, ", "))
 }
 
+// MarshalText implements the text marshaller method
 func (x *Make) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method
 func (x *Make) UnmarshalText(text []byte) error {
 	name := string(text)
 	tmp, err := ParseMake(name)
@@ -123,19 +147,19 @@ func (x *Make) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Set implements the Golang flag.Value interface func
+// Set implements the Golang flag.Value interface func.
 func (x *Make) Set(val string) error {
 	v, err := ParseMake(val)
 	*x = v
 	return err
 }
 
-// Get implements the Golang flag.Getter interface func
+// Get implements the Golang flag.Getter interface func.
 func (x *Make) Get() interface{} {
 	return *x
 }
 
-// Type implements the github.com/spf13/pFlag Value interface
+// Type implements the github.com/spf13/pFlag Value interface.
 func (x *Make) Type() string {
 	return "Make"
 }
@@ -157,6 +181,22 @@ const (
 
 const _NoZerosName = "startmiddleendpsppsppps"
 
+var _NoZerosNames = []string{
+	_NoZerosName[0:5],
+	_NoZerosName[5:11],
+	_NoZerosName[11:14],
+	_NoZerosName[14:16],
+	_NoZerosName[16:19],
+	_NoZerosName[19:23],
+}
+
+// NoZerosNames returns a list of possible string values of NoZeros.
+func NoZerosNames() []string {
+	tmp := make([]string, len(_NoZerosNames))
+	copy(tmp, _NoZerosNames)
+	return tmp
+}
+
 var _NoZerosMap = map[NoZeros]string{
 	20: _NoZerosName[0:5],
 	21: _NoZerosName[5:11],
@@ -166,11 +206,12 @@ var _NoZerosMap = map[NoZeros]string{
 	25: _NoZerosName[19:23],
 }
 
-func (i NoZeros) String() string {
-	if str, ok := _NoZerosMap[i]; ok {
+// String implements the Stringer interface.
+func (x NoZeros) String() string {
+	if str, ok := _NoZerosMap[x]; ok {
 		return str
 	}
-	return fmt.Sprintf("NoZeros(%d)", i)
+	return fmt.Sprintf("NoZeros(%d)", x)
 }
 
 var _NoZerosValue = map[string]NoZeros{
@@ -191,15 +232,17 @@ var _NoZerosValue = map[string]NoZeros{
 // ParseNoZeros attempts to convert a string to a NoZeros
 func ParseNoZeros(name string) (NoZeros, error) {
 	if x, ok := _NoZerosValue[name]; ok {
-		return NoZeros(x), nil
+		return x, nil
 	}
-	return NoZeros(0), fmt.Errorf("%s is not a valid NoZeros", name)
+	return NoZeros(0), fmt.Errorf("%s is not a valid NoZeros, try [%s]", name, strings.Join(_NoZerosNames, ", "))
 }
 
+// MarshalText implements the text marshaller method
 func (x *NoZeros) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method
 func (x *NoZeros) UnmarshalText(text []byte) error {
 	name := string(text)
 	tmp, err := ParseNoZeros(name)
@@ -210,19 +253,19 @@ func (x *NoZeros) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Set implements the Golang flag.Value interface func
+// Set implements the Golang flag.Value interface func.
 func (x *NoZeros) Set(val string) error {
 	v, err := ParseNoZeros(val)
 	*x = v
 	return err
 }
 
-// Get implements the Golang flag.Getter interface func
+// Get implements the Golang flag.Getter interface func.
 func (x *NoZeros) Get() interface{} {
 	return *x
 }
 
-// Type implements the github.com/spf13/pFlag Value interface
+// Type implements the github.com/spf13/pFlag Value interface.
 func (x *NoZeros) Type() string {
 	return "NoZeros"
 }

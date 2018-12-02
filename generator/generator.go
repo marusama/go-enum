@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	skipHolder = `_`
+	skipHolder         = `_`
+	parseCommentPrefix = `//`
 )
 
 // Generator is responsible for generating validation files for the given in a go source file.
@@ -33,7 +34,9 @@ type Generator struct {
 	noPrefix        bool
 	lowercaseLookup bool
 	marshal         bool
+	sql             bool
 	flag            bool
+	names           bool
 }
 
 // Enum holds data for a discovered enum in the parsed source
@@ -50,6 +53,7 @@ type EnumValue struct {
 	Name         string
 	PrefixedName string
 	Value        int
+	Comment      string
 }
 
 // NewGenerator is a constructor method for creating a new Generator with default
@@ -67,6 +71,7 @@ func NewGenerator() *Generator {
 	funcs["stringify"] = Stringify
 	funcs["mapify"] = Mapify
 	funcs["unmapify"] = Unmapify
+	funcs["namify"] = Namify
 
 	g.t.Funcs(funcs)
 
@@ -97,9 +102,21 @@ func (g *Generator) WithMarshal() *Generator {
 	return g
 }
 
+// WithSQLDriver is used to add marshalling to the enum
+func (g *Generator) WithSQLDriver() *Generator {
+	g.sql = true
+	return g
+}
+
 // WithFlag is used to add flag methods to the enum
 func (g *Generator) WithFlag() *Generator {
 	g.flag = true
+	return g
+}
+
+// WithNames is used to add Names methods to the enum
+func (g *Generator) WithNames() *Generator {
+	g.names = true
 	return g
 }
 
@@ -116,7 +133,6 @@ func (g *Generator) GenerateFromFile(inputFile string) ([]byte, error) {
 
 // Generate does the heavy lifting for the code generation starting from the parsed AST file.
 func (g *Generator) Generate(f *ast.File) ([]byte, error) {
-	var err error
 	enums := g.inspect(f)
 	if len(enums) <= 0 {
 		return nil, nil
@@ -125,7 +141,10 @@ func (g *Generator) Generate(f *ast.File) ([]byte, error) {
 	pkg := f.Name.Name
 
 	vBuff := bytes.NewBuffer([]byte{})
-	g.t.ExecuteTemplate(vBuff, "header", map[string]interface{}{"package": pkg})
+	err := g.t.ExecuteTemplate(vBuff, "header", map[string]interface{}{"package": pkg})
+	if err != nil {
+		return nil, errors.WithMessage(err, "Failed writing header")
+	}
 
 	// Make the output more consistent by iterating over sorted keys of map
 	var keys []string
@@ -138,8 +157,8 @@ func (g *Generator) Generate(f *ast.File) ([]byte, error) {
 		ts := enums[name]
 
 		// Parse the enum doc statement
-		enum, err := g.parseEnum(ts)
-		if err != nil {
+		enum, pErr := g.parseEnum(ts)
+		if pErr != nil {
 			continue
 		}
 
@@ -148,15 +167,20 @@ func (g *Generator) Generate(f *ast.File) ([]byte, error) {
 			"name":      name,
 			"lowercase": g.lowercaseLookup,
 			"marshal":   g.marshal,
+			"sql":       g.sql,
 			"flag":      g.flag,
+			"names":     g.names,
 		}
 
-		g.t.ExecuteTemplate(vBuff, "enum", data)
+		err = g.t.ExecuteTemplate(vBuff, "enum", data)
+		if err != nil {
+			return vBuff.Bytes(), errors.WithMessage(err, fmt.Sprintf("Failed writing enum data for enum: %q", name))
+		}
 	}
 
 	formatted, err := imports.Process(pkg, vBuff.Bytes(), nil)
 	if err != nil {
-		err = fmt.Errorf("generate: error formatting code %s\n\n%s\n", err, string(vBuff.Bytes()))
+		err = fmt.Errorf("generate: error formatting code %s\n\n%s", err, vBuff.String())
 	}
 	return formatted, err
 }
@@ -195,6 +219,17 @@ func (g *Generator) parseEnum(ts *ast.TypeSpec) (*Enum, error) {
 	values := strings.Split(strings.TrimSuffix(strings.TrimPrefix(enumDecl, `ENUM(`), `)`), `,`)
 	data := 0
 	for _, value := range values {
+		var comment string
+
+		// Trim and store comments
+		if strings.Contains(value, parseCommentPrefix) {
+			commentStartIndex := strings.Index(value, parseCommentPrefix)
+			comment = value[commentStartIndex+len(parseCommentPrefix):]
+			comment = strings.TrimSpace(comment)
+			// value without comment
+			value = value[:commentStartIndex]
+		}
+
 		// Make sure to leave out any empty parts
 		if value != "" {
 			if strings.Contains(value, `=`) {
@@ -221,7 +256,7 @@ func (g *Generator) parseEnum(ts *ast.TypeSpec) (*Enum, error) {
 				prefixedName = sanitizeValue(prefixedName)
 			}
 
-			ev := EnumValue{Name: name, RawName: rawName, PrefixedName: prefixedName, Value: data}
+			ev := EnumValue{Name: name, RawName: rawName, PrefixedName: prefixedName, Value: data, Comment: comment}
 			enum.Values = append(enum.Values, ev)
 			data++
 		}
@@ -330,8 +365,7 @@ func trimAllTheThings(thing string) string {
 
 // inspect will walk the ast and fill a map of names and their struct information
 // for use in the generation template.
-func (g *Generator) inspect(f *ast.File) map[string]*ast.TypeSpec {
-	// structs := make(map[string]*ast.StructType)
+func (g *Generator) inspect(f ast.Node) map[string]*ast.TypeSpec {
 	enums := make(map[string]*ast.TypeSpec)
 	// Inspect the AST and find all structs.
 	ast.Inspect(f, func(n ast.Node) bool {

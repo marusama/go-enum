@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/abice/go-enum/generator"
-	"github.com/mkideal/cli"
+	"github.com/go-easygen/cli"
 )
 
 type rootT struct {
@@ -17,8 +17,10 @@ type rootT struct {
 	NoPrefix  bool     `cli:"noprefix" usage:"Prevents the constants generated from having the Enum as a prefix."`
 	Lowercase bool     `cli:"lower" usage:"Adds lowercase variants of the enum strings for lookup."`
 	Marshal   bool     `cli:"marshal" usage:"Adds text marshalling functions."`
+	SQL       bool     `cli:"sql" usage:"Adds SQL database scan and value functions."`
 	Flag      bool     `cli:"flag" usage:"Adds golang flag functions."`
 	Prefix    string   `cli:"prefix" usage:"Replaces the prefix with a user one."`
+	Names     bool     `cli:"names" usage:"Generates a 'Names() []string' function, and adds the possible enum values in the error response during parsing"`
 }
 
 func main() {
@@ -38,8 +40,14 @@ func main() {
 			if argv.Marshal {
 				g.WithMarshal()
 			}
+			if argv.SQL {
+				g.WithSQLDriver()
+			}
 			if argv.Flag {
 				g.WithFlag()
+			}
+			if argv.Names {
+				g.WithNames()
 			}
 
 			originalName := fileName
@@ -51,13 +59,13 @@ func main() {
 			// Parse the file given in arguments
 			raw, err := g.GenerateFromFile(fileName)
 			if err != nil {
-				return fmt.Errorf("Error while generating enums\nInputFile=%s\nError=%s\n", ctx.Color().Cyan(fileName), ctx.Color().RedBg(err))
+				return fmt.Errorf("failed generating enums\nInputFile=%s\nError=%s", ctx.Color().Cyan(fileName), ctx.Color().RedBg(err))
 			}
 
 			mode := int(0644)
 			err = ioutil.WriteFile(outFilePath, raw, os.FileMode(mode))
 			if err != nil {
-				return fmt.Errorf("Error while writing to file %s: %s\n", ctx.Color().Cyan(outFilePath), ctx.Color().Red(err))
+				return fmt.Errorf("failed writing to file %s: %s", ctx.Color().Cyan(outFilePath), ctx.Color().Red(err))
 			}
 			ctx.String("go-enum finished. file: %s\n", ctx.Color().Cyan(originalName))
 		}
