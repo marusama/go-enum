@@ -76,6 +76,11 @@ func MakeNames() []string {
 	return tmp
 }
 
+// Names returns a list of possible string values of Make.
+func (x Make) Names() []string {
+	return MakeNames()
+}
+
 var _MakeMap = map[Make]string{
 	0:  _MakeName[0:6],
 	2:  _MakeName[6:11],
@@ -195,6 +200,11 @@ func NoZerosNames() []string {
 	tmp := make([]string, len(_NoZerosNames))
 	copy(tmp, _NoZerosNames)
 	return tmp
+}
+
+// Names returns a list of possible string values of NoZeros.
+func (x NoZeros) Names() []string {
+	return NoZerosNames()
 }
 
 var _NoZerosMap = map[NoZeros]string{

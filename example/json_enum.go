@@ -30,6 +30,11 @@ func ListingTypeNames() []string {
 	return tmp
 }
 
+// Names returns a list of possible string values of ListingType.
+func (x ListingType) Names() []string {
+	return ListingTypeNames()
+}
+
 var _ListingTypeMap = map[ListingType]string{
 	0: _ListingTypeName[0:4],
 	1: _ListingTypeName[4:8],

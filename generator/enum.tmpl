@@ -138,6 +138,11 @@ func {{.enum.Name}}Names() []string {
 	copy(tmp, _{{.enum.Name}}Names)
 	return tmp
 }
+
+// Names returns a list of possible string values of {{.enum.Name}}.
+func (x {{.enum.Name}}) Names() []string {
+	return {{.enum.Name}}Names()
+}
 {{ end -}}
 
 var _{{.enum.Name}}Map = {{ mapify .enum }}
